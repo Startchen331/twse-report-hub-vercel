@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>台灣上市櫃財報與年報抓取平台</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <main>
+        <section id="search" class="toolbar">
+          <div class="toolbar-head">
+            <div class="title-block">
+              <p>公開資訊觀測站 / TWSE doc server</p>
+              <h1>財報與年報文件抓取</h1>
+            </div>
+            <button id="themeToggle" class="icon-button" type="button" title="切換深色 / 淺色模式">◐</button>
+          </div>
+          <form id="searchForm" class="query-grid">
+            <label>
+              公司代號
+              <input name="companyCode" inputmode="numeric" placeholder="例如 2330" required />
+            </label>
+            <label>
+              公司名稱
+              <input name="companyName" placeholder="可選，例如 台積電" />
+            </label>
+            <label>
+              資料類型
+              <select name="type">
+                <option value="all">全部</option>
+                <option value="quarterly">季報</option>
+                <option value="annual">年報</option>
+              </select>
+            </label>
+            <label>
+              市場別
+              <select name="market">
+                <option value="all">全部</option>
+                <option value="listed">上市</option>
+                <option value="otc">上櫃</option>
+              </select>
+            </label>
+            <label>
+              起始年度
+              <input name="startYear" inputmode="numeric" placeholder="例如 2017" />
+            </label>
+            <label>
+              結束年度
+              <input name="endYear" inputmode="numeric" placeholder="例如 2026" />
+            </label>
+            <button class="primary-action" type="submit">查詢文件</button>
+          </form>
+        </section>
+
+        <section class="metrics" aria-live="polite">
+          <div>
+            <span id="totalCount">0</span>
+            <p>文件總數</p>
+          </div>
+          <div>
+            <span id="quarterlyCount">0</span>
+            <p>季報</p>
+          </div>
+          <div>
+            <span id="annualCount">0</span>
+            <p>年報</p>
+          </div>
+          <div>
+            <span id="yearCount">0</span>
+            <p>涵蓋年度</p>
+          </div>
+        </section>
+
+        <section id="results" class="panel">
+          <div class="panel-head">
+            <div>
+              <p>查詢結果</p>
+              <h2 id="resultTitle">尚未查詢</h2>
+            </div>
+            <div class="table-tools">
+              <input id="tableFilter" placeholder="篩選文件、季度、格式" />
+              <button id="exportCsv" type="button">匯出 CSV</button>
+            </div>
+          </div>
+          <div id="notice" class="notice hidden"></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>公司代號</th>
+                  <th>公司名稱</th>
+                  <th>年度</th>
+                  <th>季度 / 類型</th>
+                  <th>文件名稱</th>
+                  <th>公告日期</th>
+                  <th>格式</th>
+                  <th>版本</th>
+                  <th>下載連結</th>
+                </tr>
+              </thead>
+              <tbody id="resultRows">
+                <tr>
+                  <td colspan="9" class="empty">輸入公司代號後開始查詢。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="company" class="company-layout">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <p>單一公司明細</p>
+                <h2 id="companyTitle">-</h2>
+              </div>
+            </div>
+            <div id="companyDetail" class="detail-grid">
+              <div><span>最近公告</span><strong>-</strong></div>
+              <div><span>年度範圍</span><strong>-</strong></div>
+              <div><span>檔案格式</span><strong>-</strong></div>
+              <div><span>版本提示</span><strong>-</strong></div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
