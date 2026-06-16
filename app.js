@@ -53,6 +53,12 @@ function cell(text, className = "") {
   return td;
 }
 
+function labeledCell(label, text, className = "") {
+  const td = cell(text, className);
+  td.dataset.label = label;
+  return td;
+}
+
 function renderRows(data) {
   visibleRows = data;
   if (!data.length) {
@@ -62,26 +68,28 @@ function renderRows(data) {
   const fragment = document.createDocumentFragment();
   for (const row of data) {
     const tr = document.createElement("tr");
-    tr.append(cell(row.companyCode));
-    tr.append(cell(row.companyName || "-"));
-    tr.append(cell(row.year || "-"));
+    tr.append(labeledCell("公司代號", row.companyCode));
+    tr.append(labeledCell("公司名稱", row.companyName || "-"));
+    tr.append(labeledCell("年度", row.year || "-"));
 
     const period = document.createElement("td");
+    period.dataset.label = "季度 / 類型";
     const badge = document.createElement("span");
     badge.className = "badge";
     badge.textContent = row.quarter || row.periodLabel || "-";
     period.append(badge);
     tr.append(period);
 
-    const filename = cell(row.filename || "-");
+    const filename = labeledCell("文件名稱", row.filename || "-");
     filename.title = row.detail || "";
     tr.append(filename);
 
-    tr.append(cell(row.announcedAt || "-"));
-    tr.append(cell(row.fileType || "-"));
-    tr.append(cell(row.version || "-"));
+    tr.append(labeledCell("公告日期", row.announcedAt || "-"));
+    tr.append(labeledCell("格式", row.fileType || "-"));
+    tr.append(labeledCell("版本", row.version || "-"));
 
     const linkCell = document.createElement("td");
+    linkCell.dataset.label = "下載連結";
     const link = document.createElement("a");
     link.className = "download-link";
     link.href = row.sourcePostUrl || row.sourceUrl;

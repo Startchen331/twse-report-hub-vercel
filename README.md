@@ -1,6 +1,6 @@
 # TWSE Report Hub - Vercel Deploy Package
 
-This package is ready for Vercel deployment.
+This package is ready for Vercel deployment and includes the responsive desktop/mobile UI.
 
 ## Structure
 
