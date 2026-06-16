@@ -5,9 +5,95 @@ const resultTitle = document.querySelector("#resultTitle");
 const tableFilter = document.querySelector("#tableFilter");
 const exportCsv = document.querySelector("#exportCsv");
 const themeToggle = document.querySelector("#themeToggle");
+const historyList = document.querySelector("#historyList");
+const clearHistory = document.querySelector("#clearHistory");
+const LAST_STATE_KEY = "twseReportHub:lastState";
+const HISTORY_KEY = "twseReportHub:history";
+const MAX_HISTORY = 8;
 
 let rows = [];
 let visibleRows = [];
+
+function readJson(key, fallback) {
+  try {
+    return JSON.parse(localStorage.getItem(key) || "null") ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function formValues() {
+  return Object.fromEntries(new FormData(form));
+}
+
+function applyFormValues(values = {}) {
+  for (const [key, value] of Object.entries(values)) {
+    if (form.elements[key]) form.elements[key].value = value ?? "";
+  }
+}
+
+function queryLabel(query, company = {}) {
+  const code = query.companyCode || company.code || "-";
+  const name = company.name || query.companyName || "";
+  const typeMap = { all: "全部", quarterly: "季報", annual: "年報" };
+  const type = typeMap[query.type] || "全部";
+  const years = query.startYear || query.endYear ? `${query.startYear || "?"}-${query.endYear || "?"}` : "預設近10年";
+  return `${code}${name ? ` ${name}` : ""} · ${type} · ${years}`;
+}
+
+function saveLastState(data, query) {
+  localStorage.setItem(LAST_STATE_KEY, JSON.stringify({ data, query, savedAt: new Date().toISOString() }));
+}
+
+function saveHistory(query, company = {}) {
+  const nextItem = {
+    id: `${query.companyCode || ""}-${query.type || "all"}-${query.startYear || ""}-${query.endYear || ""}`,
+    query,
+    company,
+    label: queryLabel(query, company),
+    time: new Date().toISOString(),
+  };
+  const existing = readJson(HISTORY_KEY, []);
+  const deduped = existing.filter((item) => item.id !== nextItem.id);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify([nextItem, ...deduped].slice(0, MAX_HISTORY)));
+  renderHistory();
+}
+
+function renderHistory() {
+  const history = readJson(HISTORY_KEY, []);
+  historyList.replaceChildren();
+  if (!history.length) {
+    const empty = document.createElement("span");
+    empty.className = "history-empty";
+    empty.textContent = "尚無查詢紀錄";
+    historyList.append(empty);
+    return;
+  }
+  for (const item of history) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "history-chip";
+    button.textContent = item.label;
+    button.title = new Date(item.time).toLocaleString("zh-TW");
+    button.addEventListener("click", () => {
+      applyFormValues(item.query);
+      runSearch();
+    });
+    historyList.append(button);
+  }
+}
+
+function restoreLastState() {
+  const state = readJson(LAST_STATE_KEY, null);
+  if (!state?.data) return;
+  applyFormValues(state.query);
+  rows = state.data.rows || [];
+  resultTitle.textContent = `${state.data.company?.code || ""} ${state.data.company?.name || ""}`.trim() || "查詢結果";
+  updateMetrics(state.data.summary);
+  renderRows(rows);
+  renderCompany(state.data);
+  showNotice("");
+}
 
 themeToggle.addEventListener("click", () => {
   document.body.classList.toggle("dark");
@@ -145,13 +231,13 @@ function applyFilter() {
   );
 }
 
-form.addEventListener("submit", async (event) => {
-  event.preventDefault();
+async function runSearch() {
   setBusy(true);
   showNotice("");
   setEmptyRow("正在向 TWSE 查詢並整理文件...");
   try {
-    const params = new URLSearchParams(new FormData(form));
+    const query = formValues();
+    const params = new URLSearchParams(query);
     const response = await fetch(`/api/search?${params}`);
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "查詢失敗");
@@ -160,6 +246,8 @@ form.addEventListener("submit", async (event) => {
     updateMetrics(data.summary);
     renderRows(rows);
     renderCompany(data);
+    saveLastState(data, query);
+    saveHistory(query, data.company);
     const messages = [];
     if (data.company.nameMismatch) messages.push("公司名稱與代號查詢結果不一致，已以公司代號回傳資料為準。");
     if (data.errors?.length) messages.push(`${data.errors.length} 個年度或類型查詢失敗，請稍後再試或縮小查詢範圍。`);
@@ -174,9 +262,19 @@ form.addEventListener("submit", async (event) => {
   } finally {
     setBusy(false);
   }
+}
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  runSearch();
 });
 
 tableFilter.addEventListener("input", applyFilter);
+
+clearHistory.addEventListener("click", () => {
+  localStorage.removeItem(HISTORY_KEY);
+  renderHistory();
+});
 
 exportCsv.addEventListener("click", () => {
   const header = ["公司代號", "公司名稱", "年度", "季度/類型", "文件名稱", "公告日期", "格式", "版本", "下載連結"];
@@ -201,3 +299,6 @@ exportCsv.addEventListener("click", () => {
   link.click();
   URL.revokeObjectURL(link.href);
 });
+
+renderHistory();
+restoreLastState();

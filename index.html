@@ -52,6 +52,15 @@
             </label>
             <button class="primary-action" type="submit">查詢文件</button>
           </form>
+          <div class="history-panel" aria-live="polite">
+            <div class="history-head">
+              <span>過去查找紀錄</span>
+              <button id="clearHistory" type="button">清除</button>
+            </div>
+            <div id="historyList" class="history-list">
+              <span class="history-empty">尚無查詢紀錄</span>
+            </div>
+          </div>
         </section>
 
         <section class="metrics" aria-live="polite">

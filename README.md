@@ -1,6 +1,12 @@
 # TWSE Report Hub - Vercel Deploy Package
 
-This package is ready for Vercel deployment and includes the responsive desktop/mobile UI.
+This package is ready for Vercel deployment.
+
+Included UI features:
+
+- Responsive desktop/mobile layout
+- Restores the last query and result from browser localStorage
+- Shows recent user search history below the query button
 
 ## Structure
 
